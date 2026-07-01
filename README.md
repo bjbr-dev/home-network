@@ -34,7 +34,7 @@ Runs **UGOS Pro** (UGREEN's NAS OS).
 - **Windows (SMB)**: Control Panel → File Services → SMB enabled. Accessed via `\\<nas-ip>\<sharename>` in File Explorer, or mapped as a persistent network drive.
 - **Bonjour/mDNS**: enabled in Control Panel so the NAS is reachable as `<nas-name>.local` without needing to remember the IP (Windows 10/11 resolves `.local` natively — no Bonjour install needed, but the Windows network profile must be set to **Private** or the firewall blocks mDNS).
 - **Initial discovery**: `find.ugreen.com` or the UGREEN NAS mobile app, if the NAS's IP isn't already known.
-- Recommend a DHCP reservation for the NAS on the router so the IP never changes (SMB paths and any Caddy reverse-proxy config depend on it).
+- DHCP reservation set on the router: **192.168.0.5** (SMB paths and any Caddy reverse-proxy config depend on this staying fixed).
 
 **Remote access**
 - Skipped binding a UGREEN account / UGREENlink relay — remote access, if needed, will go through the existing self-hosted Caddy reverse proxy (`proxmox` repo) instead of UGREEN's cloud relay service.
@@ -43,14 +43,14 @@ Runs **UGOS Pro** (UGREEN's NAS OS).
 
 Runs as **Home Assistant OS (HAOS)** on a dedicated **Raspberry Pi** — not on the NAS or the Proxmox Docker host.
 
-- IP / hostname: _TBD — set a DHCP reservation for the Pi and fill in here_
+- IP / hostname: DHCP reservation set on the router: **192.168.0.6**
 - Access: _TBD — currently accessed directly, not yet decided whether to put it behind the Caddy reverse proxy at a `home.bjbr.me` subdomain like the other services_
 
 ## Network
 
 | Device/Service | IP | Port | Domain |
 |----------------|-----|------|--------|
-| UGREEN NAS | _TBD (set DHCP reservation)_ | — | — |
-| Home Assistant (Pi) | _TBD (set DHCP reservation)_ | 8123 | — |
+| UGREEN NAS | 192.168.0.5 | — | — |
+| Home Assistant (Pi) | 192.168.0.6 | 8123 | — |
 
 See the `proxmox` repo's network table for Proxmox host, AdGuard, and Docker-hosted services.
