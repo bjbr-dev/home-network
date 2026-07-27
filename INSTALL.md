@@ -64,7 +64,7 @@ Add/update the `*.home.bjbr.me` DNS rewrite in AdGuard Home to the NAS's static 
 From the repo root:
 
 ```sh
-./docker/update.sh
+./update.sh
 ```
 
-Pulls the latest repo changes (via the same dockerized git, no host install) and redeploys every service. See [Updating All Services](README.md#updating-all-services) in the README for details.
+Pulls the latest repo changes (via the same dockerized git, no host install) and redeploys every service. For just a git pull without touching containers, use `./pull.sh` instead. See [Updating](README.md#updating) in the README for details.

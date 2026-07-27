@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")"
 
-docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/repo" -w /repo alpine/git pull
+./pull.sh
 
 # caddy must come first — it creates the shared "caddy" network other services join
 echo "==> Updating caddy"

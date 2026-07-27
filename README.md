@@ -27,7 +27,7 @@ Docker services are defined in `docker/<service>/compose.yml`. To deploy or upda
 cd docker/<service> && docker compose up -d
 ```
 
-To update everything at once, see [Updating All Services](#updating-all-services).
+To update everything at once, see [Updating](#updating).
 
 ## Initial Proxmox Setup
 
@@ -184,15 +184,21 @@ Runs as **Home Assistant OS (HAOS)** on a dedicated **Raspberry Pi** — not on 
 2. If the service needs persistent data, bind-mount it to `/volume1/docker-data/<service>/` — **not** a Docker named volume, and **not** anywhere under the repo's own directory. This repo is public and gets `git pull`ed in place; data living inside the working tree risks eventually being committed. `/volume1/docker-data` sits entirely outside it.
 3. Run `docker compose up -d` from that directory
 
-## Updating All Services
+## Updating
 
-Pull the latest compose files and refresh every service's image in one shot:
+To just pull the latest changes from git without touching any containers:
 
 ```sh
-./docker/update.sh
+./pull.sh
 ```
 
-This pulls repo changes via the `alpine/git` image (so git doesn't need to be installed on the host), then runs `docker compose pull && docker compose up -d` for each service directory, and prunes dangling images afterward. No authentication needed — this repo is public.
+To pull and redeploy every service in one shot:
+
+```sh
+./update.sh
+```
+
+Both use the `alpine/git` image to pull (so git doesn't need to be installed on the host) — no authentication needed since this repo is public. `update.sh` calls `pull.sh` first, then runs `docker compose pull && docker compose up -d` for each service directory, and prunes dangling images afterward.
 
 `caddy` is always updated first — it creates the shared `caddy` Docker network that every other service joins, so it must exist before the rest come up.
 
