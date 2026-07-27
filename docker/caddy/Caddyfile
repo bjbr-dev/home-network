@@ -1,9 +1,14 @@
+*.home.bjbr.me {
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+	respond "Nothing here"
+}
+
 budget.home.bjbr.me {
-	tls internal
 	reverse_proxy actualbudget:5006
 }
 
 photos.home.bjbr.me {
-	tls internal
 	reverse_proxy immich-server:2283
 }

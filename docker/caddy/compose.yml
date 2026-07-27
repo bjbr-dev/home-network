@@ -1,11 +1,13 @@
 services:
   caddy:
-    image: caddy:latest
+    build: .
     container_name: caddy
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    env_file:
+      - cloudflare.env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

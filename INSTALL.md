@@ -46,11 +46,11 @@ This repo is public, so no authentication is needed.
 
 ## 6. Deploy services
 
-Caddy first, since it owns the shared Docker network the other services join:
+Before starting Caddy, create `docker/caddy/cloudflare.env` with a Cloudflare API token scoped to the `bjbr.me` zone — see [Setting Up Caddy](README.md#setting-up-caddy) in the README. Then deploy Caddy first, since it owns the shared Docker network the other services join (`--build` is required the first time, to build Caddy's custom image with the Cloudflare DNS plugin):
 
 ```sh
 cd /volume1/docker/home-network
-cd docker/caddy && docker compose up -d
+cd docker/caddy && docker compose up -d --build
 cd ../actualbudget && docker compose up -d
 ```
 

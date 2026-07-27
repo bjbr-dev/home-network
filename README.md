@@ -28,6 +28,31 @@ cd docker/<service> && docker compose up -d
 
 To update everything at once, see [Updating](#updating).
 
+## Setting Up Caddy
+
+Caddy gets a real, publicly-trusted wildcard certificate for `*.home.bjbr.me` via Let's Encrypt's DNS-01 challenge through Cloudflare (which manages `bjbr.me`'s DNS) — even though these domains only resolve internally. This means no self-signed cert to manually trust on every device.
+
+DNS-01 requires a Caddy build with the Cloudflare DNS plugin, which the stock `caddy` image doesn't include — `docker/caddy/Dockerfile` builds one via `xcaddy`. `update.sh`/`docker compose up -d --build` rebuilds it automatically when the Dockerfile changes.
+
+**1. Create a scoped Cloudflare API token**
+
+Cloudflare dashboard → **My Profile → API Tokens → Create Token** → use the **Edit zone DNS** template, restricted to just the `bjbr.me` zone.
+
+**2. Add the token as a local secret**
+
+Create `docker/caddy/cloudflare.env` (gitignored — never committed, since unlike the other services' throwaway config, this is a real credential):
+```
+CF_API_TOKEN=your-cloudflare-api-token-here
+```
+
+**3. Deploy**
+
+```sh
+cd docker/caddy && docker compose up -d --build
+```
+
+Caddy requests the wildcard cert on first start (the `*.home.bjbr.me` block in the Caddyfile), and every other site block automatically reuses it — no per-service TLS config needed.
+
 ## Setting Up AdGuard Home
 
 AdGuard Home runs as a Home Assistant add-on on the Raspberry Pi, alongside Home Assistant itself — so DNS keeps working even if the NAS goes down.
@@ -116,7 +141,7 @@ To pull and redeploy every service in one shot:
 ./update.sh
 ```
 
-Both use the `alpine/git` image to pull (so git doesn't need to be installed on the host) — no authentication needed since this repo is public. `update.sh` calls `pull.sh` first, then runs `docker compose pull && docker compose up -d` for each service directory, and prunes dangling images afterward.
+Both use the `alpine/git` image to pull (so git doesn't need to be installed on the host) — no authentication needed since this repo is public. `update.sh` calls `pull.sh` first, then runs `docker compose pull && docker compose up -d --build` for each service directory (`--build` picks up Caddyfile/Dockerfile changes for Caddy's custom image; it's a no-op for services without a build config), and prunes dangling images afterward.
 
 `caddy` is always updated first — it creates the shared `caddy` Docker network that every other service joins, so it must exist before the rest come up.
 
