@@ -181,7 +181,8 @@ Runs as **Home Assistant OS (HAOS)** on a dedicated **Raspberry Pi** — not on 
 ## Adding Services
 
 1. Create `docker/<service>/compose.yml`
-2. Run `docker compose up -d` from that directory
+2. If the service needs persistent data, bind-mount it to `/volume1/docker-data/<service>/` — **not** a Docker named volume, and **not** anywhere under the repo's own directory. This repo is public and gets `git pull`ed in place; data living inside the working tree risks eventually being committed. `/volume1/docker-data` sits entirely outside it.
+3. Run `docker compose up -d` from that directory
 
 ## Updating All Services
 

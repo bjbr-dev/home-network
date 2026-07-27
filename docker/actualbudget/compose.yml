@@ -4,7 +4,7 @@ services:
     container_name: actualbudget
     restart: unless-stopped
     volumes:
-      - actualbudget_data:/data
+      - /volume1/docker-data/actualbudget/data:/data
     networks:
       - caddy
 
@@ -12,6 +12,3 @@ networks:
   caddy:
     external: true
     name: caddy
-
-volumes:
-  actualbudget_data:
