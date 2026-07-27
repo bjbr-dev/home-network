@@ -1,0 +1,17 @@
+services:
+  actualbudget:
+    image: actualbudget/actual-server:latest
+    container_name: actualbudget
+    restart: unless-stopped
+    volumes:
+      - actualbudget_data:/data
+    networks:
+      - caddy
+
+networks:
+  caddy:
+    external: true
+    name: caddy
+
+volumes:
+  actualbudget_data:

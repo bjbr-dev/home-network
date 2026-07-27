@@ -1,0 +1,4 @@
+budget.home.bjbr.me {
+    tls internal
+    reverse_proxy actualbudget:5006
+}
