@@ -10,7 +10,6 @@ Proxmox (bare metal)
 └── VM: docker-1      — Docker host
     ├── Caddy         — reverse proxy
     ├── ActualBudget  — personal finance
-    ├── Portainer     — container management UI
     └── ...
 
 UGREEN DXP4800 Pro (NAS) — UGOS Pro, storage

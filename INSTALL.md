@@ -52,7 +52,6 @@ Caddy first, since it owns the shared Docker network the other services join:
 cd /volume1/docker/home-network
 cd docker/caddy && docker compose up -d
 cd ../actualbudget && docker compose up -d
-cd ../portainer && docker compose up -d
 ```
 
 ## 7. Point DNS at the NAS
