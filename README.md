@@ -193,6 +193,8 @@ Pull the latest compose files and refresh every service's image in one shot:
 
 This pulls repo changes via the `alpine/git` image (so git doesn't need to be installed on the host), then runs `docker compose pull && docker compose up -d` for each service directory, and prunes dangling images afterward. No authentication needed — this repo is public.
 
+`caddy` is always updated first — it creates the shared `caddy` Docker network that every other service joins, so it must exist before the rest come up.
+
 ## Network
 
 | Device/Service | IP | Port | Domain |
