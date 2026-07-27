@@ -2,3 +2,8 @@ budget.home.bjbr.me {
     tls internal
     reverse_proxy actualbudget:5006
 }
+
+immich.home.bjbr.me {
+    tls internal
+    reverse_proxy immich-server:2283
+}
