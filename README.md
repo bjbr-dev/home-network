@@ -126,7 +126,7 @@ Both use the `alpine/git` image to pull (so git doesn't need to be installed on 
 |-----------------|--------------|------|--------|
 | UGREEN NAS | 192.168.0.5 | — | — |
 | ActualBudget | 192.168.0.5 | 5006 | `actualbudget.home.bjbr.me` |
-| Immich | 192.168.0.5 | 2283 | `immich.home.bjbr.me` |
+| Immich | 192.168.0.5 | 2283 | `photos.home.bjbr.me` |
 | Home Assistant (Pi) | 192.168.0.6 | 8123 | — |
 | AdGuard (on HA Pi) | 192.168.0.6 | 3000 | `adguard.home.bjbr.me` |
 </content>
