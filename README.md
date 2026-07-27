@@ -1,19 +1,18 @@
 # home-network
 
-Documentation for my home lab: Proxmox host, Docker services, NAS, and Home Assistant.
+Documentation for my home lab: NAS-hosted Docker services and Home Assistant.
 
 ## Architecture
 
 ```
-Proxmox (bare metal)
-├── LXC: adguard      — local DNS server
-└── VM: docker-1      — Docker host
-    ├── Caddy         — reverse proxy
-    ├── ActualBudget  — personal finance
-    └── ...
+UGREEN DXP4800 Pro (NAS) — UGOS Pro, storage + Docker
+├── Caddy         — reverse proxy
+├── ActualBudget  — personal finance
+└── ...
 
-UGREEN DXP4800 Pro (NAS) — UGOS Pro, storage
-Raspberry Pi             — Home Assistant OS (HAOS)
+Raspberry Pi — Home Assistant OS (HAOS)
+├── Home Assistant
+└── AdGuard Home  — local DNS server (add-on)
 ```
 
 DNS for `*.home.bjbr.me` is handled by AdGuard Home. New devices/services should get an entry added there once their IP is fixed.
@@ -28,97 +27,17 @@ cd docker/<service> && docker compose up -d
 
 To update everything at once, see [Updating](#updating).
 
-## Initial Proxmox Setup
-
-Download and install Proxmox onto bare metal: https://www.proxmox.com/en/downloads/proxmox-virtual-environment/iso
-
-Once logged in, run the post-install script:
-
-```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh)"
-```
-
-## Setting Up the Docker Host VM
-
-Create a Debian VM in Proxmox from https://www.debian.org/distrib/netinst with the following specs, then follow these steps.
-
-| Resource | Value |
-|----------|-------|
-| Cores    | 8     |
-| RAM      | 16384 MiB (16GB) |
-| Disk     | 120 GB |
-
-Enable the QEMU Guest Agent in Proxmox under **Options → QEMU Guest Agent** before starting the VM.
-
-**0. Reserve a static IP for the VM**
-
-Find the VM's MAC address in Proxmox under **Hardware → Network Device** and create a DHCP reservation in your router so the VM always gets the same IP (e.g. `192.168.0.10`).
-
-**1. Set up sudo and SSH** (run as root: `su -`)
-```sh
-apt-get install -y sudo openssh-server
-usermod -aG sudo james
-exit
-```
-
-Then log out and SSH in from your machine — you can paste commands freely from here on:
-```sh
-ssh james@<vm-ip>
-```
-
-**2. Install dependencies**
-```sh
-sudo apt-get update && sudo apt-get install -y git curl ca-certificates qemu-guest-agent
-```
-
-**3. Install Docker**
-```sh
-curl -fsSL https://get.docker.com | sudo sh
-```
-
-**4. Allow your user to run Docker without sudo**
-```sh
-sudo usermod -aG docker $USER
-newgrp docker
-```
-
-**5. Install the GitHub CLI**
-```sh
-curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list
-sudo apt-get update && sudo apt-get install -y gh
-```
-
-**6. Authenticate with GitHub**
-```sh
-gh auth login
-```
-
-Follow the prompts — choose GitHub.com, HTTPS, and authenticate via browser or token.
-
-**7. Clone this repo**
-```sh
-gh repo clone bjbr-dev/home-network ~/home-network
-```
-
 ## Setting Up AdGuard Home
 
-AdGuard Home runs as its own LXC container on Proxmox, separate from the Docker host. This way DNS keeps working even if the Docker VM goes down.
+AdGuard Home runs as a Home Assistant add-on on the Raspberry Pi, alongside Home Assistant itself — so DNS keeps working even if the NAS goes down.
 
-**1. Create the LXC**
+**1. Install the add-on**
 
-Run this from the Proxmox shell (**node → Shell**):
-```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/ct/adguard.sh)"
-```
-
-Follow the prompts. Give it a static IP (e.g. `192.168.0.3/24`) and gateway of `192.168.0.1` when asked.
+The AdGuard Home add-on isn't in the default Home Assistant add-on store — add the community add-ons repository first: **Settings → Add-ons → Add-on Store → ⋮ → Repositories**, add `https://github.com/hassio-addons/repository`. Then search for **AdGuard Home** and install it.
 
 **2. Complete initial setup**
 
-Open `http://192.168.0.3:3000` in your browser and follow the setup wizard. When asked which interface to listen on, select **All interfaces**. Set a username and password.
-
-After setup the web UI moves to `http://192.168.0.3:3000` permanently.
+Open the add-on's web UI (or `http://192.168.0.6:3000` directly) and follow the setup wizard. When asked which interface to listen on, select **All interfaces**. Set a username and password.
 
 **3. Add DNS rewrites**
 
@@ -126,22 +45,21 @@ In the AdGuard UI go to **Filters → DNS rewrites** and add the following:
 
 | Domain | Answer |
 |--------|--------|
-| `proxmox.home.bjbr.me` | `192.168.0.2` |
-| `adguard.home.bjbr.me` | `192.168.0.3` |
-| `*.home.bjbr.me` | `192.168.0.10` |
+| `adguard.home.bjbr.me` | `192.168.0.6` |
+| `*.home.bjbr.me` | `192.168.0.5` |
 
-The wildcard `*.home.bjbr.me` catches all services on the Docker host. Specific entries like Proxmox and AdGuard take priority over the wildcard. Anything outside `home.bjbr.me` (e.g. `www.bjbr.me`) resolves normally via public DNS.
+The wildcard `*.home.bjbr.me` catches all services on the NAS, reverse-proxied through Caddy. The specific `adguard.home.bjbr.me` entry takes priority over the wildcard. Anything outside `home.bjbr.me` (e.g. `www.bjbr.me`) resolves normally via public DNS.
 
 **4. Point your Windows machine at AdGuard**
 
-Open **Settings → Network & Internet → Advanced network settings → [your adapter] → DNS server** and set the preferred DNS to `192.168.0.3`.
+Open **Settings → Network & Internet → Advanced network settings → [your adapter] → DNS server** and set the preferred DNS to `192.168.0.6`.
 
 To verify it's working:
 ```sh
 nslookup actualbudget.home.bjbr.me
 ```
 
-It should return `192.168.0.10`.
+It should return `192.168.0.5`.
 
 ## NAS — UGREEN DXP4800 Pro
 
@@ -172,7 +90,7 @@ Runs **UGOS Pro** (UGREEN's NAS OS).
 
 ## Home Assistant
 
-Runs as **Home Assistant OS (HAOS)** on a dedicated **Raspberry Pi** — not on the NAS or the Proxmox Docker host.
+Runs as **Home Assistant OS (HAOS)** on a dedicated **Raspberry Pi** — not on the NAS.
 
 - IP / hostname: DHCP reservation set on the router: **192.168.0.6**
 - Access: _TBD — currently accessed directly, not yet decided whether to put it behind the Caddy reverse proxy at a `home.bjbr.me` subdomain like the other services_
@@ -205,10 +123,8 @@ Both use the `alpine/git` image to pull (so git doesn't need to be installed on 
 
 | Device/Service | IP | Port | Domain |
 |-----------------|--------------|------|--------|
-| Proxmox | 192.168.0.2 | 8006 | `proxmox.home.bjbr.me` |
-| AdGuard | 192.168.0.3 | 3000 | `adguard.home.bjbr.me` |
-| docker-1 | 192.168.0.10 | — | — |
-| ActualBudget | 192.168.0.10 | 5006 | `actualbudget.home.bjbr.me` |
 | UGREEN NAS | 192.168.0.5 | — | — |
+| ActualBudget | 192.168.0.5 | 5006 | `actualbudget.home.bjbr.me` |
 | Home Assistant (Pi) | 192.168.0.6 | 8123 | — |
+| AdGuard (on HA Pi) | 192.168.0.6 | 3000 | `adguard.home.bjbr.me` |
 </content>
